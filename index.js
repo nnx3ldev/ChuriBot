@@ -29,7 +29,18 @@ client.once('ready', async () => {
     const commands = [
         new SlashCommandBuilder()
             .setName('quiero')
-            .setDescription('que quieres')
+            .setDescription('que quieres'),
+        new SlashCommandBuilder()
+            .setName('robar')
+            .setDescription('Sube un emoji nuevo al servidor mediante una imagen')
+            .addAttachmentOption(option =>
+                option.setName('imagen')
+                    .setDescription('La imagen del emoji (PNG, JPG o GIF)')
+                    .setRequired(true))
+            .addStringOption(option =>
+                option.setName('nombre')
+                    .setDescription('El nombre que tendrá el emoji')
+                    .setRequired(true))
     ].map(command => command.toJSON());
 
     const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
@@ -51,6 +62,30 @@ client.on('interactionCreate', async interaction => {
 
     if (interaction.commandName === 'quiero') {
         await interaction.reply('queque');
+    }
+    if (interaction.commandName === 'robar') {
+        // Verificamos si el usuario tiene permisos para gestionar emojis
+        if (!interaction.member.permissions.has('ManageEmojisAndStickers')) {
+            return interaction.reply({ content: '❌ No tienes permisos para gestionar emojis en este servidor.', ephemeral: true });
+        }
+
+        const imagen = interaction.options.getAttachment('imagen');
+        const nombre = interaction.options.getString('nombre');
+
+        await interaction.deferReply({ ephemeral: true });
+
+        try {
+            // Creamos el emoji en el servidor usando la URL de la imagen adjunta
+            const emoji = await interaction.guild.emojis.create({ 
+                attachment: imagen.url, 
+                name: nombre 
+            });
+
+            await interaction.editReply(`✅ ¡Éxito! El emoji ${emoji} ha sido agregado correctamente como \`:${nombre}:\`.`);
+        } catch (error) {
+            console.error(error);
+            await interaction.editReply('❌ Hubo un error al intentar subir el emoji. Asegúrate de que la imagen sea válida y que el servidor tenga espacio.');
+        }
     }
 });
 
