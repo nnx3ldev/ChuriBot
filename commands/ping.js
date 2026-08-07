@@ -3,25 +3,21 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('ping')
-        .setDescription('Muestra la latencia del bot y de la API.'),
-    async execute(messageOrInteraction) {
-        const sent = messageOrInteraction.createdAt ? await messageOrInteraction.reply({ content: 'Calculando ping...', fetchReply: true }) : await messageOrInteraction.reply({ content: 'Calculando ping...', fetchReply: true });
+        .setDescription('Mide el retraso de respuesta (latencia) del bot.'),
+    async execute(interaction) {
+        const sent = await interaction.reply({ content: 'Calculando retraso de red...', fetchReply: true });
         
-        const latency = sent.createdTimestamp - (messageOrInteraction.createdTimestamp || messageOrInteraction.вшейсяTimestamp);
-        const apiLatency = Math.round(messageOrInteraction.client.ws.ping);
+        const roundtripLatency = sent.createdTimestamp - interaction.createdTimestamp;
+        const wsLatency = interaction.client.ws.ping;
 
         const embed = new EmbedBuilder()
-            .setTitle('🏓 ¡Pong!')
+            .setTitle('🏓 Estado de Conexión')
             .addFields(
-                { name: 'Latencia del Bot', value: `${latency}ms`, inline: true },
-                { name: 'Latencia de la API', value: `${apiLatency}ms`, inline: true }
+                { name: 'Retraso de Ida y Vuelta', value: `${roundtripLatency}ms`, inline: true },
+                { name: 'Retraso del WebSocket', value: `${wsLatency}ms`, inline: true }
             )
-            .setColor('Blurple');
+            .setColor(wsLatency < 150 ? 'Green' : 'Yellow');
 
-        if (messageOrInteraction.editReply) {
-            await messageOrInteraction.editReply({ content: null, embeds: [embed] });
-        } else {
-            await sent.edit({ content: null, embeds: [embed] });
-        }
+        await interaction.editReply({ content: null, embeds: [embed] });
     }
 };
