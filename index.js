@@ -13,7 +13,7 @@ const client = new Client({
 });
 
 client.commands = new Collection();
-client.prefix = "!"; // Prefijo por defecto para los comandos de texto
+client.prefix = "nn!"; // Prefijo por defecto para los comandos de texto
 
 // Carga dinámica de comandos
 const commandsPath = path.join(__dirname, 'commands');
